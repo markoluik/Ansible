@@ -1,0 +1,29 @@
+# uninst_php.yml
+# Remove PHP and related packages from Debian or CentOS webservers
+# Debian: sudo apt remove --purge php* -y
+# CentOS: sudo dnf remove php* -y
+
+- hosts: webservers
+  become: yes
+  tasks:
+
+    # Remove PHP from Debian
+    - name: Remove PHP from Debian
+      apt:
+        name: php*
+        state: absent
+        purge: yes
+      when: ansible_os_family == "Debian"
+
+    # Remove PHP from CentOS
+    - name: Remove PHP from CentOS
+      dnf:
+        name: php*
+        state: absent
+      when: ansible_os_family == "RedHat"
+
+    # Remove phpinfo.php file
+    - name: Remove phpinfo.php
+      file:
+        path: /var/www/html/phpinfo.php
+        state: absent

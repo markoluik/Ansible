@@ -1,0 +1,35 @@
+---
+- hosts: webservers
+  tasks:
+
+    #Install php on Debian
+    - name: Install PHP 8.4 on Debian
+      apt:
+        name: php8.4
+        state: present
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    # Instsall latest PhP on CentOS
+    - name: install php on CentOS
+      yum:
+        name: php
+        update_cache: yes
+        state: latest
+      when: ansible_os_family == "RedHat"
+
+    # Ensure /var/www/html exists
+    - name: Ensure web root exists
+      file:
+        path: /var/www/html
+        state: directory
+        mode: '0755'
+
+    # Create phpinfo.php file to test PHP
+    - name: Create phpinfo.php
+      copy:
+        dest: /var/www/html/phpinfo.php
+        content: |
+          <?php
+          phpinfo();
+        mode: '0644'
