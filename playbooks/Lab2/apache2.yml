@@ -1,0 +1,88 @@
+---
+- hosts: webservers
+  become: yes
+  tasks:
+    - name: install apache2 Debian
+      apt:
+        name: apache2
+        update_cache: yes
+        state: latest
+      when: ansible_os_family == "Debian"
+
+    - name: Install Apache on RedHat
+      dnf:
+        name: httpd
+        update_cache: yes
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Start and enable Apache on Debian
+      service:
+        name: apache2
+        state: started
+        enabled: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Start and enable Apache on RedHat
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Allow HTTP through firewall on CentOS
+      firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+        immediate: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Allow HTTP through UFW
+      ufw:
+        rule: allow
+        name: 'Apache Full'
+      when: ansible_os_family == "Debian"
+
+    - name: allow access to user folder
+      file:
+        path: /home/klient/
+        mode: 0711
+
+    - name: making public_html to user
+      file:
+        path: /home/klient/public_html
+        owner: klient
+        group: klient
+        mode: 0755
+        state: directory
+
+    - name: Allow userdir mod
+      apache2_module:
+        name: userdir
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Copy index.html
+      copy:
+        src: /var/www/html/index.html
+        dest: /home/klient/public_html/
+        remote_src: yes
+        owner: klient
+        group: klient
+        mode: 0644
+      when: ansible_os_family == "Debian"
+
+    - name: user index html
+      lineinfile:
+        dest: /home/klient/public_html/index.html
+        regexp: "Apache2 Debian Default Page"
+        line: "KLIENT lehekülg"
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Apache2 restart
+      service:
+        name: apache2
+        state: restarted
+      when: ansible_os_family == "Debian"
